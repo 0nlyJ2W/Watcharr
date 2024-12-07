@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -253,17 +254,35 @@ type WatchProvider struct {
 type TMDBContentVideos struct {
 	ID      int `json:"id"`
 	Results []struct {
-		Iso6391     string    `json:"iso_639_1"`
-		Iso31661    string    `json:"iso_3166_1"`
-		Name        string    `json:"name"`
-		Key         string    `json:"key"`
-		Site        string    `json:"site"`
-		Size        int       `json:"size"`
-		Type        string    `json:"type"`
-		Official    bool      `json:"official"`
-		PublishedAt time.Time `json:"published_at"`
-		ID          string    `json:"id"`
+		Iso6391     string          `json:"iso_639_1"`
+		Iso31661    string          `json:"iso_3166_1"`
+		Name        string          `json:"name"`
+		Key         string          `json:"key"`
+		Site        string          `json:"site"`
+		Size        int             `json:"size"`
+		Type        string          `json:"type"`
+		Official    bool            `json:"official"`
+		PublishedAt PublishedAtTime `json:"published_at"`
+		ID          string          `json:"id"`
 	} `json:"results"`
+}
+
+type PublishedAtTime struct {
+	time.Time
+}
+
+const layout = "2006-01-02 15:04:05 UTC"
+
+func (t *PublishedAtTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\\")
+	s = strings.ReplaceAll(s, "\"", "")
+	parse, err := time.Parse(layout, s)
+	if err != nil {
+		t.Time = time.Time{}
+		return err
+	}
+	t.Time = parse
+	return nil
 }
 
 type TMDBSeasonDetails struct {
